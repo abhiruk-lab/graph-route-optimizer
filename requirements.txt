@@ -1,0 +1,13 @@
+# Core — needed from Phase 1
+osmnx>=1.9        # OSM road network extraction
+networkx>=3.2      # osmnx dependency; also handy for cross-checking your own graph impl
+
+# Testing
+pytest>=8.0
+
+# Phase 6 — visualization
+folium>=0.16
+
+# Optional — Phase 5, if you build the REST API
+# fastapi>=0.110
+# uvicorn>=0.29

@@ -1,0 +1,29 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Data (raw OSM extracts can be large — don't commit them)
+data/*.osm
+data/*.pbf
+data/*.csv
+!data/.gitkeep
+
+# Generated map/viz output
+*.html
+!templates/*.html
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
