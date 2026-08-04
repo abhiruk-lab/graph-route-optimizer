@@ -40,6 +40,71 @@ class Graph:
     def __len__(self) -> int:
         return len(self._nodes)
 
-    # TODO(Phase 1): load_from_osm(path) — build a Graph from an OSM extract
-    # (e.g. via osmnx or a raw .osm.pbf parse). Keep this as a classmethod
-    # so Graph itself stays data-source-agnostic.
+    @classmethod
+    def load_from_osm(cls, place_name: str, network_type: str = "drive") -> "Graph":
+        """Build a Graph from a real-world OSM road network, by place name.
+
+        Args:
+            place_name: A geocodable place query, e.g. "Jhunjhunu, Rajasthan, India".
+            network_type: osmnx network filter — "drive" excludes footpaths/
+                cycleways so the graph only contains roads a vehicle can use.
+
+        Requires Nominatim to have an administrative *polygon* boundary for
+        the query — this fails with a TypeError for places Nominatim only
+        knows as a single point (many smaller towns, campuses, villages).
+        For those, use load_from_point instead, which needs only a center
+        coordinate and a radius rather than a named boundary.
+        """
+        import osmnx as ox
+
+        osm_graph = ox.graph_from_place(place_name, network_type=network_type)
+        return cls._from_osmnx_graph(osm_graph)
+
+    @classmethod
+    def load_from_point(cls, lat: float, lon: float, dist: int = 3000, network_type: str = "drive") -> "Graph":
+        """Build a Graph from OSM data within `dist` meters of (lat, lon).
+
+        More robust than load_from_osm for places without a Nominatim
+        polygon boundary (small towns, campuses, villages) — only needs a
+        center point, not a named/geocoded area.
+
+        Args:
+            lat, lon: Center coordinate.
+            dist: Radius in meters to pull road network data for. Larger
+                values mean more nodes/edges and a slower fetch — 2000-5000m
+                is a reasonable range for a first working demo.
+            network_type: osmnx network filter — "drive" excludes footpaths/
+                cycleways so the graph only contains roads a vehicle can use.
+        """
+        import osmnx as ox
+
+        osm_graph = ox.graph_from_point((lat, lon), dist=dist, network_type=network_type)
+        return cls._from_osmnx_graph(osm_graph)
+
+    @staticmethod
+    def _from_osmnx_graph(osm_graph) -> "Graph":
+        """Shared conversion: an osmnx-returned networkx MultiDiGraph -> our Graph.
+
+        osmnx graphs are already directed (one-way streets are represented
+        correctly) with node attributes 'y' (lat) / 'x' (lon) and edge
+        attribute 'length' (meters). We map that directly onto our own
+        Node/Edge representation rather than depending on networkx's graph
+        API elsewhere in the codebase — this keeps osmnx/networkx as a
+        data-loading detail, not a core dependency the algorithms rely on.
+        """
+        graph = Graph()
+
+        for node_id, data in osm_graph.nodes(data=True):
+            graph.add_node(Node(id=node_id, lat=data["y"], lon=data["x"]))
+
+        for u, v, data in osm_graph.edges(data=True):
+            # A MultiDiGraph can have multiple parallel edges between the
+            # same u, v (e.g. divided roads modeled as two ways) — we keep
+            # them all rather than collapsing to one, since Dijkstra/A* just
+            # pick the cheapest path through whichever edges exist; extra
+            # parallel edges never produce an incorrect result, only
+            # (harmlessly) redundant ones.
+            weight = data.get("length", 0.0)
+            graph.add_edge(u, v, weight=weight)
+
+        return graph
