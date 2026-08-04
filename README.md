@@ -10,7 +10,6 @@
 
 A route computed between two points in Pilani, Rajasthan, rendered over the real OpenStreetMap street grid:
 
-`[Insert screenshot of route.html here — e.g. drag the file into the GitHub README editor, or run: python -m src.api.main --center "28.3670,75.6020" --radius 3000 --start "28.3670,75.6020" --end "28.3620,75.6100" --render route.html, open it in a browser, and screenshot it]`
 <img width="756" height="567" alt="Screenshot 2026-08-04 at 9 37 55 PM" src="https://github.com/user-attachments/assets/3e78def0-1c3e-492d-a876-d1053b0783be" />
 
 ## Overview
