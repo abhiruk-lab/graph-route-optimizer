@@ -27,6 +27,7 @@ from src.algorithms.dijkstra import dijkstra
 from src.algorithms.heuristics import haversine_distance
 from src.graph.graph import Graph
 from src.index.kdtree import KDTree
+from src.viz.map_render import render_route
 
 
 def parse_latlon(s: str) -> tuple[float, float]:
@@ -43,6 +44,12 @@ def main() -> None:
     parser.add_argument("--start", required=True, help='Start coordinate as "lat,lon"')
     parser.add_argument("--end", required=True, help='End coordinate as "lat,lon"')
     parser.add_argument("--algo", choices=["dijkstra", "astar"], default="astar")
+    parser.add_argument("--render", help="If set, save an HTML map of the route to this path, e.g. route.html")
+    parser.add_argument(
+        "--no-network-overlay",
+        action="store_true",
+        help="With --render, skip drawing the full road network in the background (faster/cleaner for dense areas)",
+    )
     args = parser.parse_args()
 
     start_lat, start_lon = parse_latlon(args.start)
@@ -77,6 +84,10 @@ def main() -> None:
     print(f"Distance: {cost:.1f} m")
     print(f"Nodes in path: {len(path)}")
     print(f"Query time: {elapsed * 1000:.2f} ms")
+
+    if args.render:
+        render_route(graph, path, output_path=args.render, show_full_network=not args.no_network_overlay)
+        print(f"\nMap saved to {args.render} — open it in a browser to view the route.")
 
 
 if __name__ == "__main__":
